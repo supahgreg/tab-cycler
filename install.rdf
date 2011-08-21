@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<r:RDF xmlns="http://www.mozilla.org/2004/em-rdf#"
+       xmlns:r="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <r:Description about="urn:mozilla:install-manifest">
+    <creator>Greg Parris</creator>
+    <id>tab.cycler@phob.net</id>
+    <name>Tab Cycler</name>
+    <version>1</version>
+    <bootstrap>true</bootstrap>
+    <type>2</type>
+    <homepageURL>http://github.com/supahgreg/</homepageURL>
+    <description>Adds a "Cycle Tabs" context menu item to tabs.</description>
+
+    <!-- Firefox -->
+    <targetApplication>
+      <r:Description>
+        <id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</id>
+        <minVersion>4.0b4</minVersion>
+        <maxVersion>9.0a1</maxVersion>
+      </r:Description>
+    </targetApplication>
+  </r:Description>
+</r:RDF>
