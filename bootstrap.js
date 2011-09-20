@@ -170,7 +170,10 @@ function disable(id) {
 }
 
 function install() {}
-function uninstall() {}
+function uninstall(data, reason) {
+  if (reason == ADDON_UNINSTALL)
+    Services.prefs.getBranch(PREF_BRANCH).resetBranch("");
+}
 function startup(data) {
   include(addon.getResourceURI("includes/utils.js").spec);
 
