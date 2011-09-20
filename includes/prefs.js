@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Edward Lee <edilee@mozilla.com>
+ *   Greg Parris <greg.parris@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 /**
  * Get the preference value of type specified in PREFS
  */
@@ -46,6 +48,8 @@ function getPref(key) {
   switch (typeof PREFS[key]) {
     case "boolean":
       return getPref.branch.getBoolPref(key);
+    case "number":
+      return getPref.branch.getIntPref(key);
     case "string":
       return getPref.branch.getCharPref(key);
   }
@@ -56,11 +60,17 @@ function getPref(key) {
  * Initialize default preferences specified in PREFS
  */
 function setDefaultPrefs() {
+  let MIN_INT_32 = -0x80000000;
+  let MAX_INT_32 = 0x7FFFFFFF;
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
   for (let [key, val] in Iterator(PREFS)) {
     switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
+        break;
+      case "number":
+        if (val % 1 == 0 && val >= MIN_INT_32 && val <= MAX_INT_32)
+          branch.setIntPref(key, val);
         break;
       case "string":
         branch.setCharPref(key, val);

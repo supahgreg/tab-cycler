@@ -32,9 +32,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const MIN_INT_32 = -0x80000000;
+const MAX_INT_32 = 0x7FFFFFFF;
+
 const PREF_BRANCH = "extensions.tabcycler.";
 const PREFS = {
-  cycleBy: "5"
+  "cycleBy": 5,
+  "cycleBy.custom": 5
 };
 
 var prefChgHandlers = [];
@@ -47,12 +51,9 @@ let PREF_OBSERVER = {
 
 function setPref(aKey, aVal) {
   switch (typeof(aVal)) {
-    case "string":
-      var ss = Cc["@mozilla.org/supports-string;1"]
-          .createInstance(Ci.nsISupportsString);
-      ss.data = aVal;
-      Services.prefs.getBranch(PREF_BRANCH)
-          .setComplexValue(aKey, Ci.nsISupportsString, ss);
+    case "number":
+      if (aVal % 1 == 0 && aVal >= MIN_INT_32 && aVal <= MAX_INT_32)
+        Services.prefs.getBranch(PREF_BRANCH).setIntPref(aKey, aVal);
       break;
   }
 }
@@ -86,14 +87,14 @@ function main(win) {
 
   function cycleTabs(intervalSecs) {
     var isPrimaryCommand = intervalSecs == undefined;
-    intervalSecs = parseInt(intervalSecs) || parseInt(checkedVal) || intervals[0];
+    intervalSecs = parseInt(intervalSecs) || parseInt(checkedVal) || PREFS["cycleBy"];
 
     if (isNaN(intervalSecs))
-      throw new Error(_("error.invalidInterval") + intervalSecs);
+      throw new Error(_("error.invalidInterval") + " " + intervalSecs);
 
     // update the "checked" value
     if (checkedVal != intervalSecs)
-      setPref("cycleBy", intervalSecs + "");
+      setPref("cycleBy", intervalSecs);
 
     // always stop an existing cycle
     stopCycle();
@@ -101,6 +102,36 @@ function main(win) {
     // stop if the primary menu item was clicked while cycling
     if (isPrimaryCommand && isCycling)
       return (isCycling = false);
+
+    // picked "Custom"
+    if (-1 === intervalSecs) {
+      var custom = parseInt(getPref("cycleBy.custom"));
+      // start cycling at the custom rate if done through the primary command
+      if (isPrimaryCommand && custom) {
+        intervalSecs = custom;
+      }
+      // otherwise request a custom interval via prompt
+      else {
+        var val = {
+          value: (custom ? custom : PREFS["cycleBy"])
+        };
+        var result =
+            Services.prompt.prompt(
+            null, "Tab Cycler", _("custom.enter"), val, null, {});
+        if (result) {
+          intervalSecs = parseInt(val.value);
+          if (isNaN(intervalSecs) || 1 > intervalSecs) {
+            Services.prompt.alert(
+                null, "Tab Cycler", _("error.invalidInterval") + " " + val.value);
+            return (isCycling = false);
+          }
+          setPref("cycleBy.custom", intervalSecs);
+        }
+        else {
+          return (isCycling = false);
+        }
+      }
+    }
 
     // otherwise start cycling using the new interval
     startCycle(intervalSecs);
@@ -110,8 +141,8 @@ function main(win) {
   // expose cycleTabs
   gBrowser.cycleTabs = cycleTabs;
 
-  // set up the menu
-  var intervals = [1, 2, 3, 4, 5];
+  // set up the menu (-1 indicates "Custom")
+  var intervals = [1, 2, 3, 4, 5, -1];
   var checkedVal = getPref("cycleBy");
 
   var menu = xul("splitmenu");
@@ -126,7 +157,8 @@ function main(win) {
   for (var i=0; i < intervals.length; i++) {
     let interval = intervals[i];
     let menuItem = xul("menuitem");
-    menuItem.setAttribute("label", timeTemplate.replace("{X}", interval));
+    menuItem.setAttribute("label",
+      -1 === interval ? _("custom") : timeTemplate.replace("{X}", interval));
     menuItem.setAttribute("name", "cycleTabsItem");
     menuItem.setAttribute("type", "radio");
     menuItem.setAttribute("value", interval);

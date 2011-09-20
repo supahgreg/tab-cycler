@@ -5,10 +5,10 @@
     <creator>Greg Parris</creator>
     <id>tab.cycler@phob.net</id>
     <name>Tab Cycler</name>
-    <version>1</version>
+    <version>2</version>
     <bootstrap>true</bootstrap>
     <type>2</type>
-    <homepageURL>http://github.com/supahgreg/</homepageURL>
+    <homepageURL>https://github.com/supahgreg/tab-cycler</homepageURL>
     <description>Adds a "Cycle Tabs" context menu item to tabs.</description>
 
     <!-- Firefox -->
