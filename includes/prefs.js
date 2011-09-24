@@ -45,14 +45,16 @@ function getPref(key) {
     getPref.branch = Services.prefs.getBranch(PREF_BRANCH);
 
   // Figure out what type of pref to fetch
-  switch (typeof PREFS[key]) {
-    case "boolean":
-      return getPref.branch.getBoolPref(key);
-    case "number":
-      return getPref.branch.getIntPref(key);
-    case "string":
-      return getPref.branch.getCharPref(key);
-  }
+  try {
+    switch (typeof PREFS[key]) {
+      case "boolean":
+        return getPref.branch.getBoolPref(key);
+      case "number":
+        return getPref.branch.getIntPref(key);
+      case "string":
+        return getPref.branch.getCharPref(key);
+    }
+  } catch(e) {}
   return null;
 }
 
@@ -64,6 +66,11 @@ function setDefaultPrefs() {
   let MAX_INT_32 = 0x7FFFFFFF;
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
   for (let [key, val] in Iterator(PREFS)) {
+    if (branch.getPrefType(key) != branch.PREF_INVALID
+        && typeof(val) != typeof(getPref(key))) {
+      branch.deleteBranch(key);
+    }
+
     switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
