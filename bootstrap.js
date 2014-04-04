@@ -75,6 +75,7 @@ function main(win) {
     win.clearInterval(intervalID);
     intervalID = null;
     menu.setAttribute("label", _("cycleTabs"));
+    primary.setAttribute("label", _("cycleTabs"));
   }
 
   function startCycle(aSeconds) {
@@ -82,7 +83,8 @@ function main(win) {
       gBrowser.selectTabAtIndex(
           (gBrowser.selectedTab._tPos + 1) % gBrowser.tabs.length);
     }, aSeconds * 1E3);
-    menu.setAttribute("label", _("cycleTabs.clickToStop"));
+    menu.setAttribute("label", _("cycleTabs.running"));
+    primary.setAttribute("label", _("cycleTabs.clickToStop"));
   }
 
   function cycleTabs(intervalSecs) {
@@ -145,11 +147,20 @@ function main(win) {
   var intervals = [1, 2, 3, 4, 5, -1];
   var checkedVal = getPref("cycleBy");
 
-  var menu = xul("splitmenu");
+  var menu = xul("menu");
   menu.setAttribute("label", _("cycleTabs"));
-  menu.setAttribute("oncommand", "gBrowser.cycleTabs()");
 
   var menuPopup = xul("menupopup");
+
+  // Add "Cycle Tabs" command
+  let primary = xul("menuitem");
+  primary.id = "cycleTabsPrimary";
+  primary.setAttribute("label", _("cycleTabs"));
+  primary.addEventListener("command", function() cycleTabs(), true);
+  menuPopup.appendChild(primary);
+
+  // Add separator
+  menuPopup.appendChild(xul("menuseparator"));
 
   // localized "X seconds"
   var timeTemplate = _("timeTemplate");
